@@ -22,7 +22,7 @@ entry_opts = {'font':('Helvetica', 12), 'width':userInputWidth}
 frame_opts = {'borderwidth': 3, 'relief': 'raised', 'padding': 12}
 
 # Saving results
-columns = directions + list(ai_channels.keys())
+columns = directions + list(ai_channels.keys()) + ['magnitude']
 today = date.today().strftime("%Y_%m_%d")
 folder = 'results'
 filename = f'{today}_Bfield.csv'

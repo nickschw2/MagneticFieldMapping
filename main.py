@@ -29,6 +29,9 @@ class MainApp(tk.Tk):
         # self.chargePlot.pack()
 
         # Initialize data frame to store results if there is not already a mapping from today
+        if folder not in os.listdir():
+            os.mkdir(folder)
+
         if filename not in os.listdir(folder):
             self.results = pd.DataFrame(columns=columns)
             self.results.to_csv(filepath, columns=columns, index=False)
@@ -81,16 +84,22 @@ class MainApp(tk.Tk):
 
         # Get locations
         for i, direction in enumerate(directions):
-            result[direction] = self.locationEntries[direction].get()
+            result[direction] = float(self.locationEntries[direction].get())
             location.append(result[direction])
 
         # Read daq
         values = self.daq.read()
+        # initialize magnitude to 0
+        magnitudeSquared = 0
         for channel in ai_channels:
             value = values[channel] * MagnetometerMaxField / MagnetometerMaxVoltage
             self.fieldVariables[channel].set(f'{channel}: {value:.2f}')
             result[channel] = value
+            magnitudeSquared += value**2
             # calculate magnitude!!!!!
+
+        magnitude = np.sqrt(magnitudeSquared)
+        result['magnitude'] = magnitude
 
         # Convert to data frame
         result = pd.DataFrame(result, index=[0])
