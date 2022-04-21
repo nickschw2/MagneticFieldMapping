@@ -1,6 +1,7 @@
 from ni_daq import *
 from plots import *
 from config import *
+from messages import *
 import tkinter as tk
 from tkinter import ttk
 import matplotlib.pyplot as plt
@@ -83,37 +84,46 @@ class MainApp(tk.Tk):
         location = []
 
         # Get locations
+        numericLocation = True
         for i, direction in enumerate(directions):
-            result[direction] = float(self.locationEntries[direction].get())
-            location.append(result[direction])
+            axisPosition = self.locationEntries[direction].get()
+            if axisPosition.isnumeric():
+                result[direction] = float(axisPosition)
+                location.append(axisPosition)
+            else:
+                incorrectLocationName = 'Invalid Location'
+                incorrectLocationText = 'Please input a valid location.'
+                incorrectLocationWindow = MessageWindow(self, incorrectLocationName, incorrectLocationText)
+                numericLocation = False
 
-        # Read daq
-        values = self.daq.read()
-        # initialize magnitude to 0
-        magnitudeSquared = 0
-        for channel in ai_channels:
-            value = values[channel] * MagnetometerMaxField / MagnetometerMaxVoltage
-            self.fieldVariables[channel].set(f'{channel}: {value:.2f}')
-            result[channel] = value
-            magnitudeSquared += value**2
-            # calculate magnitude!!!!!
+        if numericLocation:
+            # Read daq
+            values = self.daq.read()
+            # initialize magnitude to 0
+            magnitudeSquared = 0
+            for channel in ai_channels:
+                value = values[channel] * MagnetometerMaxField / MagnetometerMaxVoltage
+                self.fieldVariables[channel].set(f'{channel}: {value:.2f}')
+                result[channel] = value
+                magnitudeSquared += value**2
+                # calculate magnitude!!!!!
 
-        magnitude = np.sqrt(magnitudeSquared)
-        result['magnitude'] = magnitude
+            magnitude = np.sqrt(magnitudeSquared)
+            result['magnitude'] = magnitude
 
-        # Convert to data frame
-        result = pd.DataFrame(result, index=[0])
+            # Convert to data frame
+            result = pd.DataFrame(result, index=[0])
 
-        if not self.results.empty:
-            overwrite_row = (self.results[directions] == location).all(1)
-            if overwrite_row.any():
-                self.results.loc[overwrite_row] = result.to_numpy()
-                self.results.to_csv(filepath, mode='w', index=False, columns=columns)
+            if not self.results.empty:
+                overwrite_row = (self.results[directions] == location).all(1)
+                if overwrite_row.any():
+                    self.results.loc[overwrite_row] = result.to_numpy()
+                    self.results.to_csv(filepath, mode='w', index=False, columns=columns)
+                else:
+                    append_result(result)
+
             else:
                 append_result(result)
-
-        else:
-            append_result(result)
 
     # def start_plot(self):
     #     self.plotting = True

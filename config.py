@@ -15,6 +15,9 @@ directions = ['x', 'y', 'z']
 userInputPadding = 30 # pixels
 labelPadding = 30 # pixels
 userInputWidth = 8
+framePadding = 20 #pixels
+topLevelWidth = 30
+topLevelWrapLength = 275
 
 button_opts = {'font':('Helvetica', 12), 'state':'normal'}
 text_opts = {'font':('Helvetica', 12)}
