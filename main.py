@@ -88,7 +88,9 @@ class MainApp(tk.Tk):
         for i, direction in enumerate(directions):
             axisPosition = self.locationEntries[direction].get()
             if axisPosition.isnumeric():
-                result[direction] = float(axisPosition)
+                # Include the offsets from the measuring tape
+                # There is a minus sign because the measuring tape is in the opposite direction of the axes
+                result[direction] = -(float(axisPosition) - offsets[direction])
                 location.append(axisPosition)
             else:
                 incorrectLocationName = 'Invalid Location'
