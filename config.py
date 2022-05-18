@@ -1,5 +1,7 @@
 from datetime import date
 
+DEBUG_MODE = False
+
 # NI DAQ
 dev_name = 'PXI1Slot3'
 # ai_channels = {'Bx': 'ai5', 'By': 'ai4', 'Bz': 'ai3'}
@@ -7,7 +9,7 @@ dev_name = 'PXI1Slot3'
 # According to Fig 3-6 in Lakeshore 460 manual
 # (https://www.lakeshore.com/docs/default-source/product-downloads/manuals/460_manual.pdf?sfvrsn=72e8e1c4_1)
 # The positive direction of field is into the stickers
-ai_channels = {'Bx': 'ai3', 'By': 'ai5', 'Bz': 'ai4'}
+ai_channels = {'Bx': 'ai5', 'By': 'ai3', 'Bz': 'ai4'}
 
 # Voltage mapping
 MagnetometerMaxVoltage = 3 # Volts
@@ -18,7 +20,7 @@ directions = ['x', 'y', 'z']
 
 # Offsets on measuring tape to get to 0, 0, 0, in cm
 # NB that +x points west, +y points up, +z points north
-offsets = {'x': 40, 'y': 70, 'z': 30}
+offsets = {'x': 44.8, 'y': 69.5, 'z': 30.5}
 
 # GUI config
 userInputPadding = 30 # pixels
@@ -36,6 +38,6 @@ frame_opts = {'borderwidth': 3, 'relief': 'raised', 'padding': 12}
 # Saving results
 columns = directions + list(ai_channels.keys()) + ['magnitude']
 today = date.today().strftime("%Y_%m_%d")
-folder = 'results'
+folder = 'results/both_magnets'
 filename = f'{today}_Bfield.csv'
 filepath = f'{folder}/{filename}'

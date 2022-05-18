@@ -1,5 +1,5 @@
 from ni_daq import *
-from plots import *
+#from plots import *
 from config import *
 from messages import *
 import tkinter as tk
@@ -30,8 +30,8 @@ class MainApp(tk.Tk):
         # self.chargePlot.pack()
 
         # Initialize data frame to store results if there is not already a mapping from today
-        if folder not in os.listdir():
-            os.mkdir(folder)
+        # if folder not in os.listdir('results'):
+        #     os.mkdir(folder)
 
         if filename not in os.listdir(folder):
             self.results = pd.DataFrame(columns=columns)
@@ -87,11 +87,12 @@ class MainApp(tk.Tk):
         numericLocation = True
         for i, direction in enumerate(directions):
             axisPosition = self.locationEntries[direction].get()
-            if axisPosition.isnumeric():
+            if axisPosition.isnumeric() or axisPosition.replace('.','').isdigit():
                 # Include the offsets from the measuring tape
                 # There is a minus sign because the measuring tape is in the opposite direction of the axes
-                result[direction] = -(float(axisPosition) - offsets[direction])
-                location.append(axisPosition)
+                axisPositionNumeric = -round(float(axisPosition) - offsets[direction], 1)
+                result[direction] = axisPositionNumeric
+                location.append(axisPositionNumeric)
             else:
                 incorrectLocationName = 'Invalid Location'
                 incorrectLocationText = 'Please input a valid location.'
@@ -100,7 +101,11 @@ class MainApp(tk.Tk):
 
         if numericLocation:
             # Read daq
-            values = self.daq.read()
+            if not DEBUG_MODE:
+                values = self.daq.read()
+            else:
+                values = {channel: 0 for channel in ai_channels}
+
             # initialize magnitude to 0
             magnitudeSquared = 0
             for channel in ai_channels:
