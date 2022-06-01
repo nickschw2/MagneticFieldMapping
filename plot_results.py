@@ -46,6 +46,22 @@ for z, z_grp in results.groupby('z'):
         plt.title(f'z={z} cm')
         plt.grid('on')
         plt.savefig(f'images/{field}_z={z}_cm.png', dpi=150)
+        
+test = results[results['x'] == 0.8]
+x = np.linspace(-43.2, 44.8, 23)
+y = np.linspace(-16.5, 43.5, 16)
+z = [-35, 0, 35]
+X, Y = np.meshgrid(x, y)
+Z, Y = np.meshgrid(z, y)
+# Bx = np.reshape(test['Bx'].to_numpy(), (16, 23))
+By = np.reshape(test['By'].to_numpy(), (16, 3))
+Bz = np.reshape(test['Bz'].to_numpy(), (16, 3))
+## Flux lines
+plt.streamplot(Z, Y, Bz, By, density=0.5)
+plt.title('Flux lines at x=0.8')
+plt.xlabel('z (cm)')
+plt.ylabel('y (cm)')
+plt.savefig('images/flux_lines.png', dpi=150)
 
 ## Isocontours
 fig = go.Figure(data=go.Isosurface(
