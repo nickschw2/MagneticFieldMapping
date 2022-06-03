@@ -87,7 +87,7 @@ class MainApp(tk.Tk):
         numericLocation = True
         for i, direction in enumerate(directions):
             axisPosition = self.locationEntries[direction].get()
-            if axisPosition.isnumeric() or axisPosition.replace('.','').isdigit():
+            if axisPosition.isnumeric() or axisPosition.replace('.','').replace('-','').isdigit():
                 # Include the offsets from the measuring tape
                 # There is a minus sign because the measuring tape is in the opposite direction of the axes
                 axisPositionNumeric = -round(float(axisPosition) - offsets[direction], 1)

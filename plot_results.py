@@ -3,25 +3,30 @@ import numpy as np
 import pandas as pd
 import os
 import plotly.graph_objects as go
+from scipy import interpolate
 
 ## Field maps at constant z faces
 folder = 'results/both_magnets'
-files = [file for file in os.listdir(folder) if file.endswith('.csv')]
-results = pd.DataFrame()
-for file in files:
-    filename = f'{folder}/{file}'
-    results = pd.concat([results, pd.read_csv(filename)])
-    # truncated_results = results[np.abs(results['x']) <= 16]
-    # truncated_results = truncated_results[np.abs(results['y']) <= 16]
+files = [file for file in os.listdir(folder) if file.endswith('Bfield.csv')]
 
-# Sort results by x, y, and z coordinates
-results = results.sort_values(['x', 'y', 'z'])
+def compileResults(files):
+    results = pd.DataFrame()
+    for file in files:
+        filename = f'{folder}/{file}'
+        results = pd.concat([results, pd.read_csv(filename)])
 
-# Add columns for normal and tangential values
-results['r'] = np.sqrt(results['x'] ** 2 + results['y'] ** 2)
-results['theta'] = np.arctan(results['y'] / results['x'])
-results['Br'] = (results['Bx'] * results['x'] + results['By'] * results['y']) / results['r']
-results['Btheta'] = (results['By'] * results['x'] - results['Bx'] * results['y']) / results['r']
+    # Sort results by x, y, and z coordinates
+    results = results.sort_values(['x', 'y', 'z'])
+
+    # Add columns for normal and tangential values
+    results['r'] = np.sqrt(results['x'] ** 2 + results['y'] ** 2)
+    results['theta'] = np.arctan(results['y'] / results['x'])
+    results['Br'] = (results['Bx'] * results['x'] + results['By'] * results['y']) / results['r']
+    results['Btheta'] = (results['By'] * results['x'] - results['Bx'] * results['y']) / results['r']
+
+    return results
+
+results = compileResults(files)
 
 fields = ['Bx', 'By', 'Bz', 'magnitude', 'Br', 'Btheta']
 
@@ -37,7 +42,7 @@ for z, z_grp in results.groupby('z'):
         fig = plt.figure()
         ax = fig.add_subplot()
         ax.set_aspect('equal', adjustable='box')
-        plt.tricontourf(x, y, B, levels=20)
+        plt.tricontourf(x, y, B, levels=30)
         plt.colorbar(label=f'{field} (T)')
         plt.axhline(color='white')
         plt.axvline(color='white')
@@ -45,35 +50,73 @@ for z, z_grp in results.groupby('z'):
         plt.ylabel('y (cm)')
         plt.title(f'z={z} cm')
         plt.grid('on')
-        plt.savefig(f'images/{field}_z={z}_cm.png', dpi=150)
-        
-test = results[results['x'] == 0.8]
-x = np.linspace(-43.2, 44.8, 23)
-y = np.linspace(-16.5, 43.5, 16)
-z = [-35, 0, 35]
-X, Y = np.meshgrid(x, y)
+        plt.savefig(f'images/{field}_z={z}_cm.png', dpi=200)
+
+        ## Interpolate to find the location of the field center
+        if field == 'Bz':
+            B_function = interpolate.interp2d(np.unique(x), np.unique(y), B, kind='linear')
+            x_interp = np.linspace(min(x), max(x), 200)
+            y_interp = np.linspace(min(y), max(y), 200)
+            B_interp = B_function(x_interp, y_interp)
+
+            yMaxIndex, xMaxIndex = np.where(np.abs(B_interp) == np.amax(np.abs(B_interp)))
+            xMax = x_interp[xMaxIndex]
+            yMax = y_interp[yMaxIndex]
+            print(f'The interpolated center of the plane z={z} cm is at (x, y) = {xMax}, {yMax}')
+
+## Flux lines streamplot
+z_plane = 0.0 # cm
+streamplotResults = results[results['x'] == 0.8]
+x = np.linspace(min(streamplotResults['x']), max(streamplotResults['x']), 23)
+y = np.linspace(min(streamplotResults['y']), max(streamplotResults['y']), 16)
+z = np.linspace(min(streamplotResults['z']), max(streamplotResults['z']), 4)
 Z, Y = np.meshgrid(z, y)
-# Bx = np.reshape(test['Bx'].to_numpy(), (16, 23))
-By = np.reshape(test['By'].to_numpy(), (16, 3))
-Bz = np.reshape(test['Bz'].to_numpy(), (16, 3))
+By = np.reshape(streamplotResults['By'].to_numpy(), (16, 4))
+Bz = np.reshape(streamplotResults['Bz'].to_numpy(), (16, 4))
 ## Flux lines
+plt.figure()
 plt.streamplot(Z, Y, Bz, By, density=0.5)
+ax.set_aspect('equal', adjustable='box')
 plt.title('Flux lines at x=0.8')
 plt.xlabel('z (cm)')
 plt.ylabel('y (cm)')
-plt.savefig('images/flux_lines.png', dpi=150)
+plt.savefig('images/flux_lines.png', dpi=200)
 
 ## Isocontours
-fig = go.Figure(data=go.Isosurface(
-    x=results['x'].to_numpy(),
-    y=results['y'].to_numpy(),
-    z=results['z'].to_numpy(),
-    value=results['Br'].to_numpy(),
-    opacity=0.6,
-    surface_count=6,
-    caps=dict(x_show=False, y_show=False, z_show=False),
-    colorscale='BlueRed',
-    colorbar={'title': 'Br'}
-))
+isocontourFields = ['Br', 'Bz']
+for field in isocontourFields:
+    fig = go.Figure(data=go.Isosurface(
+        x=results['x'].to_numpy(),
+        y=results['y'].to_numpy(),
+        z=results['z'].to_numpy(),
+        value=results[field].to_numpy(),
+        opacity=0.6,
+        surface_count=8,
+        caps=dict(x_show=False, y_show=False, z_show=False),
+        colorscale='BlueRed',
+        colorbar={'title': field}
+    ))
 
-fig.show()
+    fig.show()
+
+
+## Linear plot along central axis
+os.listdir(folder)
+linearFiles = [file for file in os.listdir(folder) if file.endswith('Bfield_linear.csv')]
+linearResults = compileResults(linearFiles)
+
+linearResults['dBdz'] = linearResults['Bz'].diff()/linearResults['z'].diff() * 20
+linearFields = ['Bx', 'By', 'Bz', 'magnitude', 'dBdz']
+
+
+for (x, y), xy_grp in linearResults.groupby(['x', 'y']):
+    fig, ax = plt.subplots()
+    for field in linearFields:
+        xy_grp.plot(ax=ax, x='z', y=field)
+
+    ax.axvline(color='black')
+    ax.set_xlabel('z (cm)')
+    ax.set_ylabel('Magnetic Field (T)')
+    ax.set_title(f'(x, y)=({x}, {y}) cm')
+    ax.grid('on')
+    fig.savefig('images/linearField.png', dpi=200)
