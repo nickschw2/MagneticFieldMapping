@@ -53,13 +53,13 @@ for z, z_grp in results.groupby('z'):
         plt.savefig(f'images/{field}_z={z}_cm.png', dpi=200)
 
         ## Interpolate to find the location of the field center
-        if field == 'Bz':
-            B_function = interpolate.interp2d(np.unique(x), np.unique(y), B, kind='linear')
+        if field == 'Br':
+            B_function = interpolate.interp2d(np.unique(x), np.unique(y), B, kind='cubic')
             x_interp = np.linspace(min(x), max(x), 200)
             y_interp = np.linspace(min(y), max(y), 200)
             B_interp = B_function(x_interp, y_interp)
 
-            yMaxIndex, xMaxIndex = np.where(np.abs(B_interp) == np.amax(np.abs(B_interp)))
+            yMaxIndex, xMaxIndex = np.where(np.abs(B_interp) == np.amin(np.abs(B_interp)))
             xMax = x_interp[xMaxIndex]
             yMax = y_interp[yMaxIndex]
             print(f'The interpolated center of the plane z={z} cm is at (x, y) = {xMax}, {yMax}')
@@ -69,10 +69,10 @@ z_plane = 0.0 # cm
 streamplotResults = results[results['x'] == 0.8]
 x = np.linspace(min(streamplotResults['x']), max(streamplotResults['x']), 23)
 y = np.linspace(min(streamplotResults['y']), max(streamplotResults['y']), 16)
-z = np.linspace(min(streamplotResults['z']), max(streamplotResults['z']), 4)
+z = np.linspace(min(streamplotResults['z']), max(streamplotResults['z']), 5)
 Z, Y = np.meshgrid(z, y)
-By = np.reshape(streamplotResults['By'].to_numpy(), (16, 4))
-Bz = np.reshape(streamplotResults['Bz'].to_numpy(), (16, 4))
+By = np.reshape(streamplotResults['By'].to_numpy(), (16, 5))
+Bz = np.reshape(streamplotResults['Bz'].to_numpy(), (16, 5))
 ## Flux lines
 plt.figure()
 plt.streamplot(Z, Y, Bz, By, density=0.5)

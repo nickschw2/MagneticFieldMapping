@@ -20,7 +20,7 @@ directions = ['x', 'y', 'z']
 
 # Offsets on measuring tape to get to 0, 0, 0, in cm
 # NB that +x points west, +y points up, +z points north
-offsets = {'x': 44.8, 'y': 69.5, 'z': 30.5}
+offsets = {'x': 45.5, 'y': 69.5, 'z': 53}
 
 # GUI config
 userInputPadding = 30 # pixels
