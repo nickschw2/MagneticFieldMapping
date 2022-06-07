@@ -27,6 +27,7 @@ def compileResults(files):
     return results
 
 results = compileResults(files)
+results.to_csv('results/compiledResults.csv')
 
 fields = ['Bx', 'By', 'Bz', 'magnitude', 'Br', 'Btheta']
 
@@ -69,7 +70,7 @@ for z, z_grp in results.groupby('z'):
 
         ## Plots showing symmetry
         if field == 'Bz':
-            xLim = 16
+            xLim = 32
             yLim = 16
             xSteps = int(xLim / 2 + 1) # spacing of 4 cm
             ySteps = int(yLim / 2 + 1) # spacing of 4 cm
@@ -83,7 +84,7 @@ for z, z_grp in results.groupby('z'):
             fig = plt.figure()
             ax = fig.add_subplot()
             ax.set_aspect('equal', adjustable='box')
-            plt.contourf(x_interp, y_interp, DeltaBNormalized, levels=5)
+            plt.contourf(x_interp, y_interp, DeltaBNormalized, levels=10)
             plt.colorbar(label=f'Normalized symmetry $\Delta${field}/{field}')
             plt.axhline(color='white')
             plt.axvline(color='white')
@@ -120,7 +121,7 @@ for field in isocontourFields:
         z=results['z'].to_numpy(),
         value=results[field].to_numpy(),
         opacity=0.6,
-        surface_count=8,
+        surface_count=20,
         caps=dict(x_show=False, y_show=False, z_show=False),
         colorscale='BlueRed',
         colorbar={'title': field}
@@ -133,6 +134,7 @@ for field in isocontourFields:
 os.listdir(folder)
 linearFiles = [file for file in os.listdir(folder) if file.endswith('Bfield_linear.csv')]
 linearResults = compileResults(linearFiles)
+linearResults.to_csv('results/linearResultsCompiled.csv')
 
 linearResults['dBdz'] = linearResults['Bz'].diff()/linearResults['z'].diff() * 20
 linearFields = ['Bx', 'By', 'Bz', 'magnitude', 'dBdz']
