@@ -42,7 +42,7 @@ for z, z_grp in results.groupby('z'):
         fig = plt.figure()
         ax = fig.add_subplot()
         ax.set_aspect('equal', adjustable='box')
-        plt.tricontourf(x, y, B, levels=30)
+        plt.tricontourf(x, y, B, levels=20)
         plt.colorbar(label=f'{field} (T)')
         plt.axhline(color='white')
         plt.axvline(color='white')
@@ -53,16 +53,45 @@ for z, z_grp in results.groupby('z'):
         plt.savefig(f'images/{field}_z={z}_cm.png', dpi=200)
 
         ## Interpolate to find the location of the field center
-        if field == 'Br':
+        if field == 'Br' or field == 'Bz':
             B_function = interpolate.interp2d(np.unique(x), np.unique(y), B, kind='cubic')
             x_interp = np.linspace(min(x), max(x), 200)
             y_interp = np.linspace(min(y), max(y), 200)
             B_interp = B_function(x_interp, y_interp)
 
-            yMaxIndex, xMaxIndex = np.where(np.abs(B_interp) == np.amin(np.abs(B_interp)))
+            if field == 'Br':
+                yMaxIndex, xMaxIndex = np.where(np.abs(B_interp) == np.amin(np.abs(B_interp)))
+            if field == 'Bz':
+                yMaxIndex, xMaxIndex = np.where(np.abs(B_interp) == np.amax(np.abs(B_interp)))
             xMax = x_interp[xMaxIndex]
             yMax = y_interp[yMaxIndex]
-            print(f'The interpolated center of the plane z={z} cm is at (x, y) = {xMax}, {yMax}')
+            print(f'The {field}-field interpolated center of the plane z={z} cm is at (x, y) = {xMax}, {yMax}')
+
+        ## Plots showing symmetry
+        if field == 'Bz':
+            xLim = 16
+            yLim = 16
+            xSteps = int(xLim / 2 + 1) # spacing of 4 cm
+            ySteps = int(yLim / 2 + 1) # spacing of 4 cm
+            x_interp = np.linspace(-xLim, xLim, xSteps)
+            y_interp = np.linspace(-yLim, yLim, ySteps)
+            B_interp = B_function(x_interp, y_interp)
+
+            # Delta B is the difference between opposite points around the center
+            DeltaB = B_interp - np.flip(B_interp)
+            DeltaBNormalized = DeltaB / B_interp
+            fig = plt.figure()
+            ax = fig.add_subplot()
+            ax.set_aspect('equal', adjustable='box')
+            plt.contourf(x_interp, y_interp, DeltaBNormalized, levels=5)
+            plt.colorbar(label=f'Normalized symmetry $\Delta${field}/{field}')
+            plt.axhline(color='white')
+            plt.axvline(color='white')
+            plt.xlabel('x (cm)')
+            plt.ylabel('y (cm)')
+            plt.title(f'z={z} cm')
+            plt.grid('on')
+            plt.savefig(f'images/Delta{field}_z={z}_cm.png', dpi=200)
 
 ## Flux lines streamplot
 z_plane = 0.0 # cm
